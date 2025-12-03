@@ -16,6 +16,8 @@ export type CourierStatus = 'AVAILABLE' | 'ON_TRIP';
 export interface Courier {
   id: string;
   name: string;
+  phone: string;
+  pinHash: string;
   status: CourierStatus;
 }
 

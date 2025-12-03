@@ -3,10 +3,12 @@ import { Courier } from './types';
 import { v4 as uuid } from 'uuid';
 import { onCourierAvailable } from './scheduler';
 
-export function createCourier(name: string): Courier {
+export function createCourier(name: string, phone: string, pinHash: string): Courier {
   const courier: Courier = {
     id: uuid(),
     name,
+    phone,
+    pinHash,
     status: 'AVAILABLE'
   };
 
@@ -24,4 +26,10 @@ export function setCourierAvailable(courierId: string): Courier | null {
   onCourierAvailable(courier);
 
   return courier;
+}
+
+export function sanitizeCourier(courier: Courier): Omit<Courier, 'pinHash'> {
+  // Remove sensitive fields before returning to API consumers
+  const { pinHash, ...safeCourier } = courier;
+  return safeCourier;
 }
