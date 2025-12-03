@@ -32,6 +32,31 @@ export async function setCourierAvailable(id: string): Promise<Courier> {
   return handleResponse<Courier>(response);
 }
 
+export async function createCourier(name: string): Promise<Courier> {
+  const response = await fetch(`${API_BASE_URL}/couriers`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name }),
+  });
+  return handleResponse<Courier>(response);
+}
+
+export async function createOrder(address: string, lat: number, lng: number): Promise<Order> {
+  const response = await fetch(`${API_BASE_URL}/orders`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ address, lat, lng }),
+  });
+  return handleResponse<Order>(response);
+}
+
+export async function markOrderDelivered(id: string): Promise<Order> {
+  const response = await fetch(`${API_BASE_URL}/orders/${id}/delivered`, {
+    method: 'POST',
+  });
+  return handleResponse<Order>(response);
+}
+
 export async function fetchCourierCurrentRoute(id: string): Promise<Route | null> {
   const response = await fetch(`${API_BASE_URL}/couriers/${id}/current-route`);
   if (response.status === 204) {

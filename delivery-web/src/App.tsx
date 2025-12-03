@@ -4,6 +4,7 @@ import SummaryCards from './components/Dashboard/SummaryCards';
 import OrdersTable from './components/Dashboard/OrdersTable';
 import CouriersTable from './components/Dashboard/CouriersTable';
 import RoutesTable from './components/Dashboard/RoutesTable';
+import TestingArea from './components/Testing/TestingArea';
 import { useOrders } from './hooks/useOrders';
 import { useCouriers } from './hooks/useCouriers';
 import { useRoutes } from './hooks/useRoutes';
@@ -25,9 +26,9 @@ function DetailPanel({ title, children }: { title: string; children: React.React
 }
 
 export default function App() {
-  const { orders, error: ordersError } = useOrders();
-  const { couriers, error: couriersError, markAvailable, fetchCurrentRoute } = useCouriers();
-  const { routes, error: routesError } = useRoutes();
+  const { orders, error: ordersError, refetch: refetchOrders } = useOrders();
+  const { couriers, error: couriersError, markAvailable, fetchCurrentRoute, refetch: refetchCouriers } = useCouriers();
+  const { routes, error: routesError, refetch: refetchRoutes } = useRoutes();
 
   const [selectedCourier, setSelectedCourier] = useState<Courier | null>(null);
   const [courierRoute, setCourierRoute] = useState<Route | null>(null);
@@ -52,6 +53,12 @@ export default function App() {
 
   return (
     <Layout>
+      <TestingArea
+        onRefreshOrders={refetchOrders}
+        onRefreshCouriers={refetchCouriers}
+        onRefreshRoutes={refetchRoutes}
+      />
+
       <SummaryCards orders={orders} couriers={couriers} routes={routes} />
 
       {(ordersError || couriersError || routesError) && (
