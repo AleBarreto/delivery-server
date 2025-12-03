@@ -1,0 +1,22 @@
+.layout {
+  min-height: 100vh;
+  background: linear-gradient(180deg, #f8fafc 0%, #eef2ff 100%);
+}
+
+.layout__header {
+  background-color: #111827;
+  color: #f9fafb;
+  padding: 16px 24px;
+}
+
+.layout__header h1 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.layout__main {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px;
+}
