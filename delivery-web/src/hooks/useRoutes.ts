@@ -11,15 +11,17 @@ interface RoutesState {
 
 const REFRESH_MS = 5000;
 
-export function useRoutes(): RoutesState {
+export function useRoutes(enabled = true): RoutesState {
   const [routes, setRoutes] = useState<Route[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(enabled);
   const [error, setError] = useState<string>();
 
   const loadRoutes = useCallback(async () => {
+    if (!enabled) return;
     try {
-      const data = await fetchRoutes();
-      setRoutes(data);
+      setLoading(true);
+      const result = await fetchRoutes();
+      setRoutes(result.data);
       setError(undefined);
     } catch (err) {
       console.error(err);
@@ -27,13 +29,19 @@ export function useRoutes(): RoutesState {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [enabled]);
 
   useEffect(() => {
+    if (!enabled) {
+      setRoutes([]);
+      setLoading(false);
+      setError(undefined);
+      return;
+    }
     loadRoutes();
     const id = setInterval(loadRoutes, REFRESH_MS);
     return () => clearInterval(id);
-  }, [loadRoutes]);
+  }, [enabled, loadRoutes]);
 
   return { routes, loading, error, refetch: loadRoutes };
 }

@@ -1,7 +1,10 @@
 import { v4 as uuid } from 'uuid';
-import { couriers, orders, routes } from './db';
-import { routingConfig, restaurantLocation } from './config';
-import { Courier, LatLng, Order, Route } from './types';
+import { orders, routes, persistDB, restaurantProfile } from './db';
+import { routingConfig } from './config';
+import { LatLng, Order, Route, RoutingConfig } from './types';
+
+const ROUTE_CHECK_INTERVAL_MS = 30_000;
+let schedulerInterval: NodeJS.Timeout | null = null;
 
 /**
  * Calcula a diferença em minutos entre duas datas.
@@ -70,39 +73,23 @@ export function buildMapsUrl(origin: LatLng, selectedOrders: Order[]): string {
 }
 
 export function onNewOrderCreated(order: Order) {
-  // No MVP, apenas logamos. A lógica principal dispara quando o motoboy fica disponível.
   console.log(`[scheduler] Novo pedido criado: ${order.id}`);
+  generateRoutesFromPending();
 }
 
-export function onCourierAvailable(courier: Courier) {
-  const pending = orders.filter(o => o.status === 'PENDING').sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
-
-  if (pending.length === 0) {
-    console.log('[scheduler] Nenhum pedido pendente.');
-    return;
-  }
-
-  const now = new Date();
-  const oldest = pending[0];
-  const waitMinutes = diffInMinutes(now, oldest.createdAt);
-  const hasMinBatch = pending.length >= routingConfig.minBatch;
-  const hasOldOrder = waitMinutes >= routingConfig.maxWaitMinutes;
-
-  if (!hasMinBatch && !hasOldOrder) {
-    console.log('[scheduler] Aguardando mais pedidos para formar rota.');
-    return;
-  }
+function selectOrdersForRoute(pending: Order[], config: RoutingConfig): Order[] {
+  if (pending.length === 0) return [];
 
   const selected: Order[] = [];
-  let currentPoint: LatLng = restaurantLocation;
+  let currentPoint: LatLng = { lat: restaurantProfile.lat, lng: restaurantProfile.lng };
 
-  // começa com o pedido mais antigo
+  const oldest = pending[0];
   selected.push(oldest);
   currentPoint = { lat: oldest.lat, lng: oldest.lng };
 
   const remaining = pending.slice(1);
 
-  while (selected.length < routingConfig.maxBatch && remaining.length > 0) {
+  while (selected.length < config.maxBatch && remaining.length > 0) {
     const closest = findClosest(currentPoint, remaining);
     selected.push(closest);
     currentPoint = { lat: closest.lat, lng: closest.lng };
@@ -110,26 +97,160 @@ export function onCourierAvailable(courier: Courier) {
     remaining.splice(index, 1);
   }
 
+  return selected;
+}
+
+function createPendingRoute(selected: Order[]): Route {
   const route: Route = {
     id: uuid(),
-    courierId: courier.id,
     orderIds: selected.map(o => o.id),
-    status: 'ASSIGNED',
+    status: 'AWAITING_COURIER',
     createdAt: new Date(),
-    mapsUrl: buildMapsUrl(restaurantLocation, selected)
+    mapsUrl: buildMapsUrl({ lat: restaurantProfile.lat, lng: restaurantProfile.lng }, selected),
+    totalPrice: selected.reduce((total, order) => total + (order.deliveryPrice ?? 0), 0)
   };
 
   routes.push(route);
 
   selected.forEach(order => {
-    order.status = 'ON_ROUTE';
-    order.courierId = courier.id;
+    order.status = 'QUEUED';
+    order.courierId = undefined;
     order.routeId = route.id;
   });
 
-  courier.status = 'ON_TRIP';
-
   console.log(
-    `[scheduler] Rota ${route.id} criada para courier ${courier.name} com pedidos: ${route.orderIds.join(', ')}`
+    `[scheduler] Rota ${route.id} criada aguardando atribuição com pedidos: ${route.orderIds.join(', ')}`
   );
+
+  return route;
+}
+
+export function generateRoutesFromPending() {
+  let pending = orders
+    .filter(o => o.status === 'PENDING')
+    .sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
+
+  if (pending.length === 0) {
+    console.log('[scheduler] Nenhum pedido pendente para agrupar.');
+    return;
+  }
+
+  const createdRoutes: string[] = [];
+  const config = resolveRoutingConfig();
+
+  while (pending.length > 0) {
+    const now = new Date();
+    const oldest = pending[0];
+    const waitMinutes = diffInMinutes(now, oldest.createdAt);
+    const hasMinBatch = pending.length >= config.minBatch;
+    const holdExpired =
+      !!config.smartBatchHoldMinutes && waitMinutes >= config.smartBatchHoldMinutes;
+    const hasOldOrder = waitMinutes >= config.maxWaitMinutes || holdExpired;
+    const clusteredSelection = findNearbyCluster(pending, config);
+    const holdingForCluster = !clusteredSelection && shouldHoldForCluster(pending, waitMinutes, config);
+
+    if (!clusteredSelection && holdingForCluster && !hasOldOrder) {
+      console.log('[scheduler] Segurando pedidos para combinar rota na mesma região.');
+      break;
+    }
+
+    if (!clusteredSelection && !hasMinBatch && !hasOldOrder) {
+      console.log('[scheduler] Aguardando mais pedidos ou SLA para formar nova rota.');
+      break;
+    }
+
+    const selected = clusteredSelection ?? selectOrdersForRoute(pending, config);
+    if (selected.length === 0) break;
+
+    const route = createPendingRoute(selected);
+    createdRoutes.push(route.id);
+
+    const selectedIds = new Set(selected.map(o => o.id));
+    pending = pending.filter(order => !selectedIds.has(order.id));
+  }
+
+  if (createdRoutes.length > 0) {
+    persistDB();
+  }
+}
+
+const SMART_BATCH_DISTANCE_KM = 3;
+
+function isWithinClusterDistance(target: Order, reference: Order): boolean {
+  return distance({ lat: target.lat, lng: target.lng }, { lat: reference.lat, lng: reference.lng }) <= SMART_BATCH_DISTANCE_KM;
+}
+
+function buildClusterFromSeed(pending: Order[], seedIndex: number, config: RoutingConfig): Order[] {
+  const seed = pending[seedIndex];
+  const cluster: Order[] = [seed];
+
+  for (let i = 0; i < pending.length && cluster.length < config.maxBatch; i++) {
+    if (i === seedIndex) continue;
+    const candidate = pending[i];
+    const isClose = cluster.some(item => isWithinClusterDistance(candidate, item));
+    if (isClose) {
+      cluster.push(candidate);
+    }
+  }
+
+  return cluster;
+}
+
+function findNearbyCluster(pending: Order[], config: RoutingConfig): Order[] | undefined {
+  for (let i = 0; i < pending.length; i++) {
+    const cluster = buildClusterFromSeed(pending, i, config);
+    if (cluster.length >= config.minBatch) {
+      return cluster
+        .sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime())
+        .slice(0, config.maxBatch);
+    }
+  }
+  return undefined;
+}
+
+export function startSchedulerLoop() {
+  if (schedulerInterval) {
+    return;
+  }
+
+  console.log(`[scheduler] Loop automático iniciado (a cada ${ROUTE_CHECK_INTERVAL_MS / 1000}s).`);
+  schedulerInterval = setInterval(() => {
+    try {
+      generateRoutesFromPending();
+    } catch (error) {
+      console.error('[scheduler] Falha ao reprocessar pedidos pendentes automaticamente.', error);
+    }
+  }, ROUTE_CHECK_INTERVAL_MS);
+
+  // processamento inicial para ordens já pendentes
+  generateRoutesFromPending();
+}
+
+function resolveRoutingConfig(): RoutingConfig {
+  return {
+    minBatch: restaurantProfile.minBatch ?? routingConfig.minBatch,
+    maxBatch: restaurantProfile.maxBatch ?? routingConfig.maxBatch,
+    maxWaitMinutes: restaurantProfile.maxWaitMinutes ?? routingConfig.maxWaitMinutes,
+    smartBatchHoldMinutes:
+      restaurantProfile.smartBatchHoldMinutes ?? routingConfig.smartBatchHoldMinutes ?? 0,
+  };
+}
+
+function shouldHoldForCluster(pending: Order[], waitMinutes: number, config: RoutingConfig): boolean {
+  if (!config.smartBatchHoldMinutes || config.smartBatchHoldMinutes <= 0) return false;
+  if (pending.length < 2) return false;
+  if (waitMinutes >= config.smartBatchHoldMinutes) return false;
+
+  const first = pending[0];
+  let minGap = Infinity;
+
+  for (let i = 1; i < pending.length; i++) {
+    const candidate = pending[i];
+    const gap = distance({ lat: first.lat, lng: first.lng }, { lat: candidate.lat, lng: candidate.lng });
+    if (gap < minGap) {
+      minGap = gap;
+    }
+  }
+
+  return minGap >= SMART_BATCH_DISTANCE_KM;
 }

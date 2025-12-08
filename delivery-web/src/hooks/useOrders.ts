@@ -11,15 +11,17 @@ interface OrdersState {
 
 const REFRESH_MS = 5000;
 
-export function useOrders(): OrdersState {
+export function useOrders(enabled = true): OrdersState {
   const [orders, setOrders] = useState<Order[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(enabled);
   const [error, setError] = useState<string>();
 
   const loadOrders = useCallback(async () => {
+    if (!enabled) return;
     try {
-      const data = await fetchOrders();
-      setOrders(data);
+      setLoading(true);
+      const result = await fetchOrders();
+      setOrders(result.data);
       setError(undefined);
     } catch (err) {
       console.error(err);
@@ -27,13 +29,19 @@ export function useOrders(): OrdersState {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [enabled]);
 
   useEffect(() => {
+    if (!enabled) {
+      setOrders([]);
+      setLoading(false);
+      setError(undefined);
+      return;
+    }
     loadOrders();
     const id = setInterval(loadOrders, REFRESH_MS);
     return () => clearInterval(id);
-  }, [loadOrders]);
+  }, [enabled, loadOrders]);
 
   return { orders, loading, error, refetch: loadOrders };
 }

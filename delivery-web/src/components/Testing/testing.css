@@ -58,6 +58,14 @@
   font-size: 0.95rem;
 }
 
+.testing__field select {
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid #d1d5db;
+  background: #f9fafb;
+  font-size: 0.95rem;
+}
+
 .testing__hint {
   margin: 0;
   color: #6b7280;

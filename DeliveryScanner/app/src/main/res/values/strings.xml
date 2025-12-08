@@ -1,0 +1,32 @@
+<resources>
+    <string name="app_name">Delivery Scanner</string>
+    <string name="title_scanner">Scanear recibo</string>
+    <string name="title_result">Detalhes do recibo</string>
+    <string name="scan_cta">Iniciar captura</string>
+    <string name="scan_hint">Aponte o recibo e mantenha o endereço dentro da moldura.</string>
+    <string name="camera_permission_rationale">Precisamos da câmera para ler o endereço do recibo.</string>
+    <string name="open_settings">Abrir configurações</string>
+    <string name="status_detecting">Procurando endereço…</string>
+    <string name="status_detected">Endereço detectado</string>
+    <string name="status_sending">Enviando para o servidor…</string>
+    <string name="status_success">Endereço enviado com sucesso.</string>
+    <string name="status_error">Falha ao enviar para o servidor.</string>
+    <string name="detected_address_label">Endereço identificado</string>
+    <string name="retry_button">Escanear novamente</string>
+    <string name="placeholder_no_address">Nenhum endereço encontrado ainda.</string>
+    <string name="confirm_cta">Confirmar endereço</string>
+    <string name="edit_address_hint">Edite o endereço, se necessário</string>
+    <string name="send_button">Enviar para o painel</string>
+    <string name="server_config_button">Configurar servidor</string>
+    <string name="server_config_title">Servidor do painel</string>
+    <string name="server_config_url_hint">Ex.: http://10.0.2.2:3000/</string>
+    <string name="server_config_token_hint">Token (opcional)</string>
+    <string name="server_config_save">Salvar</string>
+    <string name="server_config_info">• Emulador: http://10.0.2.2:3000/ | Dispositivo físico: http://&lt;IP-da-sua-máquina&gt;:3000/ (mesma rede Wi-Fi)</string>
+    <string name="login_title">Delivery Scanner</string>
+    <string name="login_subtitle">Acesse com seu usuário administrador</string>
+    <string name="login_email_hint">Email</string>
+    <string name="login_password_hint">Senha</string>
+    <string name="login_button">Entrar</string>
+    <string name="login_error_default">Falha ao entrar. Verifique suas credenciais.</string>
+</resources>

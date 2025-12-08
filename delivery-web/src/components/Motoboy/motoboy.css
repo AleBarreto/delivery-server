@@ -25,6 +25,18 @@
   color: #f8fafc;
 }
 
+.motoboy-logo {
+  width: 64px;
+  height: 64px;
+  border-radius: 16px;
+  background: rgba(99, 102, 241, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  margin-bottom: 16px;
+}
+
 .motoboy-title {
   margin: 0 0 4px;
   font-size: 1.8rem;
@@ -62,6 +74,12 @@
   outline: none;
   border-color: #6366f1;
   box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+}
+
+.motoboy-steps {
+  margin: 0 0 24px;
+  padding: 0 0 0 18px;
+  color: #cbd5e1;
 }
 
 .motoboy-button {
@@ -107,6 +125,14 @@
   margin: 8px 0 0;
   color: #fca5a5;
   font-weight: 600;
+  text-align: center;
+}
+
+.motoboy-info {
+  margin: 8px 0 0;
+  color: #a7f3d0;
+  font-weight: 600;
+  text-align: center;
 }
 
 .motoboy-topbar {
@@ -129,28 +155,67 @@
   gap: 10px;
 }
 
+.motoboy-tabs {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  width: min(960px, 100%);
+  margin: 0 auto;
+}
+
+.motoboy-tab {
+  flex: 1;
+  padding: 12px 16px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  background: rgba(15, 23, 42, 0.8);
+  color: #cbd5e1;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.motoboy-tab--active {
+  border-color: #6366f1;
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(79, 70, 229, 0.3));
+  color: #f8fafc;
+  box-shadow: 0 8px 24px rgba(79, 70, 229, 0.25);
+}
+
+.motoboy-topbar__status {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 8px;
+}
+
 .motoboy-chip {
   padding: 10px 12px;
   border-radius: 999px;
   border: none;
   font-weight: 700;
   color: #0b1222;
-  cursor: pointer;
   transition: transform 0.15s ease;
 }
 
-.motoboy-chip--online {
+.motoboy-chip--available {
   background: #22c55e;
   color: #052e16;
 }
 
-.motoboy-chip--offline {
+.motoboy-chip--assigned {
+  background: #fde68a;
+  color: #78350f;
+}
+
+.motoboy-chip--ontrip {
   background: #fbbf24;
   color: #422006;
 }
 
-.motoboy-chip:hover {
-  transform: translateY(-1px);
+.motoboy-chip--offline {
+  background: #cbd5f5;
+  color: #1e1b4b;
 }
 
 .motoboy-link {
@@ -161,6 +226,11 @@
   cursor: pointer;
 }
 
+.motoboy-status-text {
+  margin: 0;
+  color: #94a3b8;
+}
+
 .motoboy-hero {
   width: min(960px, 100%);
   margin: 0 auto;
@@ -169,6 +239,22 @@
   border-radius: 16px;
   border: 1px solid rgba(99, 102, 241, 0.4);
   color: #e2e8f0;
+}
+
+.motoboy-hero__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 16px;
+}
+
+.motoboy-map-card {
+  background: rgba(15, 23, 42, 0.5);
+  border: 1px solid rgba(99, 102, 241, 0.2);
+  border-radius: 12px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .motoboy-hero__title {
@@ -185,6 +271,27 @@
   display: flex;
   flex-wrap: wrap;
   gap: 12px;
+}
+
+.motoboy-progress {
+  width: 100%;
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.1);
+  margin-bottom: 12px;
+  overflow: hidden;
+}
+
+.motoboy-progress__bar {
+  height: 100%;
+  background: linear-gradient(135deg, #22d3ee, #0ea5e9);
+  transition: width 0.2s ease;
+}
+
+.motoboy-hint {
+  margin: 0;
+  color: #fef3c7;
+  font-size: 0.9rem;
 }
 
 .motoboy-section {
@@ -217,13 +324,48 @@
   color: #94a3b8;
 }
 
-.motoboy-cards {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+.motoboy-timeline {
+  display: flex;
+  flex-direction: column;
   gap: 12px;
+  padding: 12px;
 }
 
-.motoboy-card {
+.motoboy-stop {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 12px;
+  position: relative;
+}
+
+.motoboy-stop__line {
+  position: absolute;
+  left: 12px;
+  top: 0;
+  bottom: -12px;
+  width: 2px;
+  background: rgba(148, 163, 184, 0.4);
+}
+
+.motoboy-stop:last-child .motoboy-stop__line {
+  display: none;
+}
+
+.motoboy-stop__badge {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #6366f1;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  margin-top: 4px;
+  z-index: 1;
+}
+
+.motoboy-stop__content {
   background: #0b1222;
   border: 1px solid #1f2937;
   border-radius: 14px;
@@ -235,10 +377,12 @@
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
 }
 
-.motoboy-card__header {
+.motoboy-stop__header {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 
 .motoboy-card__title {
@@ -278,6 +422,46 @@
   color: #22c55e;
 }
 
+.motoboy-history {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 12px;
+}
+
+.motoboy-history--page {
+  padding: 0;
+}
+
+.motoboy-history__card {
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 12px;
+  padding: 16px;
+  background: rgba(15, 23, 42, 0.6);
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  color: #e2e8f0;
+}
+
+.motoboy-history__meta {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: flex-end;
+  color: #cbd5e1;
+}
+
+.motoboy-history__total {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  font-weight: 700;
+  color: #f8fafc;
+}
+
 @media (max-width: 640px) {
   .motoboy-shell {
     padding: 24px 12px;
@@ -292,7 +476,7 @@
 
   .motoboy-topbar {
     flex-direction: column;
-    align-items: flex-start;
+  align-items: flex-start;
   }
 
   .motoboy-hero__actions {

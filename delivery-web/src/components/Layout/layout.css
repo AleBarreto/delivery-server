@@ -7,12 +7,50 @@
   background-color: #111827;
   color: #f9fafb;
   padding: 16px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
 }
 
 .layout__header h1 {
   margin: 0;
   font-size: 1.25rem;
   font-weight: 700;
+}
+
+.layout__user {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.layout__user-info {
+  text-align: right;
+  font-size: 0.85rem;
+  color: #d1d5db;
+  line-height: 1.2;
+}
+
+.layout__user-info strong {
+  display: block;
+  font-size: 0.95rem;
+  color: #fff;
+}
+
+.layout__logout {
+  border: 1px solid #f87171;
+  background: transparent;
+  color: #fee2e2;
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.layout__logout:hover {
+  background: #f87171;
+  color: #111827;
 }
 
 .layout__main {

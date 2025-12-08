@@ -1,0 +1,58 @@
+@import '../Dashboard/tables.css';
+
+.status-guide__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+.status-guide__card {
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 16px;
+  background: #fff;
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.05);
+}
+
+.status-guide__card h3 {
+  margin: 0 0 4px;
+  font-size: 1.1rem;
+}
+
+.status-guide__subtitle {
+  margin: 0 0 12px;
+  color: #6b7280;
+  font-size: 0.9rem;
+}
+
+.status-guide__item {
+  margin-bottom: 12px;
+}
+
+.status-guide__item dt {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-weight: 600;
+  color: #111827;
+}
+
+.status-guide__item dd {
+  margin: 4px 0 0 0;
+  color: #4b5563;
+  font-size: 0.9rem;
+}
+
+.status-guide__code {
+  font-family: 'Fira Code', 'Roboto Mono', monospace;
+  font-size: 0.8rem;
+  color: #4f46e5;
+  background: #eef2ff;
+  padding: 2px 6px;
+  border-radius: 6px;
+}
+
+.status-guide__label {
+  font-size: 0.9rem;
+  color: #1f2937;
+}
